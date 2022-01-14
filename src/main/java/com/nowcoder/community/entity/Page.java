@@ -10,9 +10,9 @@ public class Page {
     private int current = 1;
     // Maximum display
     private int limit = 10;
-    //Total number of data(total number of pages)
+    // Total number of data(total number of pages)
     private int rows;
-    //Path to specific page
+    // Path to specific page
     private String path;
 
     public int getCurrent() {
