@@ -1,6 +1,8 @@
 package com.nowcoder.community.service;
 
+import com.nowcoder.community.dao.LoginTicketMapper;
 import com.nowcoder.community.dao.UserMapper;
+import com.nowcoder.community.entity.LoginTicket;
 import com.nowcoder.community.entity.User;
 import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
@@ -28,6 +30,9 @@ public class UserService implements CommunityConstant {
 
     @Autowired
     private TemplateEngine templateEngine;
+
+    @Autowired
+    private LoginTicketMapper loginTicketMapper;
 
     @Value("${community.path.domain}")
     private String domain;
@@ -105,6 +110,64 @@ public class UserService implements CommunityConstant {
         } else {
             return ACTIVATION_FAILURE;
         }
+    }
+
+    /**
+     *
+     * @param username
+     * @param password 这里是明文，所以我们需要加上salt然后用md5加密后再与数据库中的记录对比
+     * @param expiredSeconds
+     * @return map可以封装多种信息，在这里返回map可以表明登录失败的具体原因
+     */
+
+    public Map<String, Object> login(String username, String password, int expiredSeconds) {
+        Map<String, Object> map = new HashMap<>();
+
+        // Return error message for null values
+        if(StringUtils.isBlank(username)) {
+            map.put("usernameMsg", "username should not be empty");
+            return map;
+        }
+        if(StringUtils.isBlank(password)) {
+            map.put("passwordMsg", "password should not be empty");
+            return map;
+        }
+
+        // Verify account
+        User user = userMapper.selectByName(username);
+        if(user == null) {
+            map.put("usernameMsg", "This account does not exist");
+            return map;
+        }
+
+        // Verify status
+        if(user.getStatus() == 0) {
+            map.put("usernameMsg", "This account has not been activated");
+            return map;
+        }
+
+        // Verify password
+        password = CommunityUtil.md5(password + user.getSalt());
+        if (!user.getPassword().equals(password)) {
+            map.put("passwordMsg", "Password is not correct");
+            return map;
+        }
+
+        // Generate LoginTicket
+        LoginTicket loginTicket = new LoginTicket();
+        loginTicket.setUserId(user.getId());
+        loginTicket.setTicket(CommunityUtil.generateUUID());
+        loginTicket.setStatus(0);
+        loginTicket.setExpired(new Date(System.currentTimeMillis() + expiredSeconds * 1000L));
+        loginTicketMapper.insertLoginTicket(loginTicket);
+
+        map.put("ticket", loginTicket.getTicket());
+
+        return map;
+    }
+
+    public void logout(String ticket) {
+        loginTicketMapper.updateStatus(ticket, 1);
     }
 
 }
