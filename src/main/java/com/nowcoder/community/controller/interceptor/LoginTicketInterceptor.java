@@ -23,6 +23,15 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
     @Autowired
     private HostHolder hostHolder;
 
+
+    /**
+     * 通过我们写的CookieUtil来获得登录信息从而判断用户是否登录以及用户的信息
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     * @throws Exception
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 从cookie中获取凭证
@@ -36,13 +45,21 @@ public class LoginTicketInterceptor implements HandlerInterceptor {
                 // 根据凭证查询用户
                 User user = userService.findUserById(loginTicket.getUserId());
                 // 在本次请求中持有用户
-                hostHolder.setUser(user);
+                hostHolder.setUser(user); // 需要考虑多线程的情况，利用hostHolder隔离线程
             }
         }
 
         return true;
     }
 
+    /**
+     * 确定用户登录之后，我们把user加到model里面。之后我们可以在html文件中通过user是否存在来决定header部分什么该显示
+     * @param request
+     * @param response
+     * @param handler
+     * @param modelAndView
+     * @throws Exception
+     */
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         User user = hostHolder.getUser();

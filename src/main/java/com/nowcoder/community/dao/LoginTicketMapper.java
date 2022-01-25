@@ -1,3 +1,6 @@
+// 这个文件配置的是如何通过接口来操作MySQL里面的login ticket这个表
+// Login ticket存在cookies中可以让我们通过ID定位到User，从而不用在cookie里面储存用户这么敏感的消息
+
 package com.nowcoder.community.dao;
 
 import com.nowcoder.community.entity.LoginTicket;
@@ -10,7 +13,7 @@ public interface LoginTicketMapper {
             "insert into login_ticket(user_id, ticket, status, expired) ",
             "values(#{userId}, #{ticket}, #{status}, #{expired})"
     })
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    @Options(useGeneratedKeys = true, keyProperty = "id") //让MySQL自动生成ID的value
     int insertLoginTicket(LoginTicket loginTicket);
 
     @Select({
