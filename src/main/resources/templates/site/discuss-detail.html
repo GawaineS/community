@@ -132,11 +132,12 @@
 								<ul class="d-inline float-right">
 									<li class="d-inline ml-2"><a href="#" class="text-primary">赞(1)</a></li>
 									<li class="d-inline ml-2">|</li>
-									<li class="d-inline ml-2"><a href="#" class="text-primary">回复(<i th:text="${cvo.replyCount}">2</i>)</a></li>
+									<li class="d-inline ml-2"><a th:href="|#pinglun-${cvoStat.count}|" data-toggle="collapse"
+																 class="text-primary">回复(<i th:text="${cvo.replyCount}">2</i>)</a></li>
 								</ul>
 							</div>
 							<!-- 回复列表 -->
-							<ul class="list-unstyled mt-4 bg-gray p-3 font-size-12 text-muted">
+							<ul th:id = "|pinglun-${cvoStat.count}|" th:class="|list-unstyled mt-4 bg-gray p-3 font-size-12 text-muted ${cvo.replyCount>0?'':'collapse'}|">
 
 								<li class="pb-3 pt-3 mb-3 border-bottom" th:each="rvo:${cvo.replys}">
 									<div>
