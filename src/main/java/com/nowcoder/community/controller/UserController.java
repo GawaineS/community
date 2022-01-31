@@ -2,13 +2,17 @@ package com.nowcoder.community.controller;
 
 import com.nowcoder.community.annotation.LoginRequired;
 import com.nowcoder.community.entity.User;
+import com.nowcoder.community.service.FollowService;
+import com.nowcoder.community.service.LikeService;
 import com.nowcoder.community.service.UserService;
+import com.nowcoder.community.util.CommunityConstant;
 import com.nowcoder.community.util.CommunityUtil;
 import com.nowcoder.community.util.HostHolder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -25,24 +29,37 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @RequestMapping("/user")
-public class UserController {
+public class UserController implements CommunityConstant {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
+    // 设定上传文件的地址
     @Value("${community.path.upload}")
     private String uploadPath;
 
+    // 设定项目的的地址
     @Value("${community.path.domain}")
     private String domain;
 
+    // 设定Cookie生效的页面范围
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
+    // 注入线程容器获取用户信息
     @Autowired
     private HostHolder hostHolder;
 
+    // 注入用户业务逻辑
     @Autowired
     private UserService userService;
+
+    // 注入点赞业务逻辑
+    @Autowired
+    private LikeService likeService;
+
+    // 注入关注业务逻辑
+    @Autowired
+    private FollowService followService;
 
     @LoginRequired
     @RequestMapping(path = "/setting", method = RequestMethod.GET)
@@ -112,7 +129,9 @@ public class UserController {
     // 修改密码
     @RequestMapping(path = "/updatePassword", method = RequestMethod.POST)
     public String updatePassword(String oldPassword, String newPassword, Model model) {
+        // 获取容器存储的用户信息
         User user = hostHolder.getUser();
+        // 检查用户是否在数据库中
         Map<String, Object> map = userService.updatePassword(user.getId(), oldPassword, newPassword);
         if (map == null || map.isEmpty()) {
             return "redirect:/logout";
@@ -121,6 +140,46 @@ public class UserController {
             model.addAttribute("newPasswordMsg", map.get("newPasswordMsg"));
             return "/site/setting";
         }
+    }
+
+    /**
+     * 实现个人主页功能
+     * 1 记录用户收到的点赞数量
+     * 2 记录用户关注者的数量
+     * 3 显示登录用户是否关注该用户
+     * @param userId 用户ID
+     * @param model 用来给页面传入消息的组件
+     * @return 返回个人主页的网址
+     */
+    @RequestMapping(path = "/profile/{userId}", method = RequestMethod.GET)
+    public String getProfilePage(@PathVariable("userId") int userId, Model model) {
+        // 获取容器存储的用户信息并检查
+        User user = userService.findUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("该用户不存在!");
+        }
+
+        // 返回点赞数量
+        int likeCount = likeService.findUserLikeCount(userId);
+        // 关注数量
+        long followeeCount = followService.findFolloweeCount(userId, ENTITY_TYPE_USER);
+        // 粉丝数量
+        long followerCount = followService.findFollowerCount(ENTITY_TYPE_USER, userId);
+        // 是否已关注
+        boolean hasFollowed = false;
+        if (hostHolder.getUser() != null) {
+            hasFollowed = followService.hasFollowed(hostHolder.getUser().getId(), ENTITY_TYPE_USER, userId);
+        }
+
+        // 返回数据给模版
+        model.addAttribute("user", user);
+        model.addAttribute("likeCount", likeCount);
+        model.addAttribute("followeeCount", followeeCount);
+        model.addAttribute("hasFollowed", hasFollowed);
+        model.addAttribute("followerCount", followerCount);
+
+
+        return "/site/profile";
     }
 
 }
