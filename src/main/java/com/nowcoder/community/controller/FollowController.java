@@ -61,18 +61,28 @@ public class FollowController implements CommunityConstant {
         return CommunityUtil.getJSONString(0, "已取消关注!");
     }
 
+    /**
+     * 显示用户关注的列表
+     * @param userId 用户ID
+     * @param page 分页信息
+     * @param model 模版
+     * @return 关注列表网址
+     */
     @RequestMapping(path = "/followees/{userId}", method = RequestMethod.GET)
     public String getFollowees(@PathVariable("userId") int userId, Page page, Model model) {
+        // 获取User并检查，然后传入模版里面
         User user = userService.findUserById(userId);
         if (user == null) {
             throw new RuntimeException("该用户不存在!");
         }
         model.addAttribute("user", user);
 
+        // 设置关注列表的分页
         page.setLimit(5);
         page.setPath("/followees/" + userId);
         page.setRows((int) followService.findFolloweeCount(userId, ENTITY_TYPE_USER));
 
+        // 获取全部关注列表
         List<Map<String, Object>> userList = followService.findFollowees(userId, page.getOffset(), page.getLimit());
         if (userList != null) {
             for (Map<String, Object> map : userList) {
@@ -85,18 +95,28 @@ public class FollowController implements CommunityConstant {
         return "/site/followee";
     }
 
+    /**
+     * 显示用户的粉丝列表
+     * @param userId 用户ID
+     * @param page 分页信息
+     * @param model 模版
+     * @return 粉丝列表网址
+     */
     @RequestMapping(path = "/followers/{userId}", method = RequestMethod.GET)
     public String getFollowers(@PathVariable("userId") int userId, Page page, Model model) {
+        // 获取User并检查，然后传入模版里面
         User user = userService.findUserById(userId);
         if (user == null) {
             throw new RuntimeException("该用户不存在!");
         }
         model.addAttribute("user", user);
 
+        // 设置关注列表的分页
         page.setLimit(5);
         page.setPath("/followers/" + userId);
         page.setRows((int) followService.findFollowerCount(ENTITY_TYPE_USER, userId));
 
+        // 获取全部粉丝列表
         List<Map<String, Object>> userList = followService.findFollowers(userId, page.getOffset(), page.getLimit());
         if (userList != null) {
             for (Map<String, Object> map : userList) {
