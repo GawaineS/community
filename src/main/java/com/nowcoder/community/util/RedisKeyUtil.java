@@ -50,17 +50,29 @@ public class RedisKeyUtil {
         return PREFIX_FOLLOWER + SPLIT + entityType + SPLIT + entityId;
     }
 
-    // 登录验证码
+    /**
+     * 登录验证码
+     * @param owner 用户临时凭证来链接用户和验证码
+     * @return
+     */
     public static String getKaptchaKey(String owner) {
         return PREFIX_KAPTCHA + SPLIT + owner;
     }
 
-    // 登录的凭证
+    /**
+     * 登录的凭证
+     * @param ticket
+     * @return
+     */
     public static String getTicketKey(String ticket) {
         return PREFIX_TICKET + SPLIT + ticket;
     }
 
-    // 用户
+    /**
+     * 拼接储存用户的key
+     * @param userId 用户的ID
+     * @return 用户key
+     */
     public static String getUserKey(int userId) {
         return PREFIX_USER + SPLIT + userId;
     }

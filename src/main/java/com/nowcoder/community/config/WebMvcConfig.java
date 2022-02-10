@@ -21,7 +21,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
     private LoginRequiredInterceptor loginRequiredInterceptor;
 
-    // 配置拦截器里面拦截和不拦截的部分
+    /**
+     * 配置拦截器里面拦截和不拦截的部分
+     * 主要用途是防止拦截器拦截了
+     * @param registry
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(alphaInterceptor)
